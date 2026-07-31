@@ -2,12 +2,45 @@ from flask import Flask, request, jsonify
 import xmltodict
 import requests
 import os
+from rapidfuzz import process, fuzz
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
     return "API funcionando!"
+
+@app.route("/buscar_similar", methods=["POST"])
+def buscar_similar():
+    dados = request.get_json(silent=True)
+
+    if not dados or "nome" not in dados or "lista" not in dados:
+        return jsonify({"erro": "Envie um JSON com as chaves 'nome' (produto da nota) e 'lista' (produtos já cadastrados)."}), 400
+
+    nome_busca = dados.get("nome")
+    lista_produtos = dados.get("lista")  # lista de nomes já cadastrados no banco
+
+    if not lista_produtos:
+        return jsonify({"encontrado": False, "melhor_match": None, "score": 0})
+
+    # token_sort_ratio ignora a ordem das palavras, ajuda quando o texto vem
+    # com termos extras ou em ordem diferente entre fornecedores
+    melhor = process.extractOne(
+        nome_busca,
+        lista_produtos,
+        scorer=fuzz.token_sort_ratio
+    )
+
+    if melhor is None:
+        return jsonify({"encontrado": False, "melhor_match": None, "score": 0})
+
+    nome_encontrado, score, _ = melhor
+
+    return jsonify({
+        "encontrado": score >= 75,  # ajuste esse limite conforme os testes
+        "melhor_match": nome_encontrado,
+        "score": round(score, 1)
+    })
 
 @app.route("/lerxml", methods=["POST"])
 def lerxml():
