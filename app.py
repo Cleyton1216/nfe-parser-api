@@ -10,6 +10,54 @@ app = Flask(__name__)
 def home():
     return "API funcionando!"
 
+@app.route("/buscar_similar_lote", methods=["POST"])
+def buscar_similar_lote():
+    dados = request.get_json(silent=True)
+
+    if not dados or "produtos" not in dados or "lista" not in dados:
+        return jsonify({"erro": "Envie um JSON com as chaves 'produtos' (nomes da nota) e 'lista' (produtos já cadastrados)."}), 400
+
+    produtos_nota = dados.get("produtos")  # lista de nomes vindos do XML
+    lista_cadastrados = dados.get("lista")  # lista de nomes já no banco
+
+    resultados = []
+
+    for nome_produto in produtos_nota:
+        if not lista_cadastrados:
+            resultados.append({
+                "nome_nota": nome_produto,
+                "encontrado": False,
+                "melhor_match": None,
+                "score": 0
+            })
+            continue
+
+        melhor = process.extractOne(
+            nome_produto,
+            lista_cadastrados,
+            scorer=fuzz.token_set_ratio
+        )
+
+        if melhor is None:
+            resultados.append({
+                "nome_nota": nome_produto,
+                "encontrado": False,
+                "melhor_match": None,
+                "score": 0
+            })
+            continue
+
+        nome_encontrado, score, _ = melhor
+
+        resultados.append({
+            "nome_nota": nome_produto,
+            "encontrado": score >= 80,
+            "melhor_match": nome_encontrado,
+            "score": round(score, 1)
+        })
+
+    return jsonify({"resultados": resultados})
+
 @app.route("/buscar_similar", methods=["POST"])
 def buscar_similar():
     dados = request.get_json(silent=True)
