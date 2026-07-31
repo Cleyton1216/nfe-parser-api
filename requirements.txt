@@ -2,3 +2,4 @@ Flask
 xmltodict
 requests
 gunicorn
+rapidfuzz
