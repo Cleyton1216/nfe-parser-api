@@ -18,6 +18,10 @@ def lerxml():
 
     url = dados.get("url")
 
+    # Bubble costuma retornar URLs de arquivo sem o esquema (ex: "//cdn.bubble.io/...")
+    if url.startswith("//"):
+        url = "https:" + url
+
     try:
         resposta = requests.get(url, timeout=15)
         resposta.raise_for_status()  # lança erro se status != 200
