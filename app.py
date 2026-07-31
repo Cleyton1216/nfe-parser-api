@@ -28,7 +28,7 @@ def buscar_similar():
     melhor = process.extractOne(
         nome_busca,
         lista_produtos,
-        scorer=fuzz.token_sort_ratio
+        scorer=fuzz.token_set_ratio
     )
 
     if melhor is None:
@@ -37,7 +37,7 @@ def buscar_similar():
     nome_encontrado, score, _ = melhor
 
     return jsonify({
-        "encontrado": score >= 75,  # ajuste esse limite conforme os testes
+        "encontrado": score >= 80,  # ajuste esse limite conforme os testes
         "melhor_match": nome_encontrado,
         "score": round(score, 1)
     })
