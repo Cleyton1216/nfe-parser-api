@@ -15,7 +15,13 @@ def buscar_similar_lote():
     dados = request.get_json(silent=True)
 
     if not dados or "produtos" not in dados or "lista" not in dados:
-        return jsonify({"erro": "Envie um JSON com as chaves 'produtos' (nomes da nota) e 'lista' (produtos já cadastrados)."}), 400
+        # DIAGNÓSTICO TEMPORÁRIO: mostra exatamente o que chegou no corpo da
+        # requisição, para identificar por que o JSON não foi reconhecido.
+        texto_bruto = request.get_data(as_text=True)
+        return jsonify({
+            "erro": "Envie um JSON com as chaves 'produtos' (nomes da nota) e 'lista' (produtos já cadastrados).",
+            "debug_corpo_recebido": texto_bruto
+        }), 400
 
     produtos_nota = dados.get("produtos")  # lista de nomes vindos do XML
     lista_cadastrados = dados.get("lista")  # lista de nomes já no banco
