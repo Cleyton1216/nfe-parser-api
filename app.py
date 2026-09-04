@@ -15,10 +15,19 @@ def buscar_similar_lote():
     dados = request.get_json(silent=True)
 
     if not dados or "produtos" not in dados or "lista" not in dados:
-        return jsonify({"erro": "Envie um JSON com as chaves 'produtos' (nomes da nota) e 'lista' (produtos já cadastrados)."}), 400
+        texto_bruto = request.get_data(as_text=True)
+        return jsonify({
+            "erro": "Envie um JSON com as chaves 'produtos' (nomes da nota) e 'lista' (produtos já cadastrados).",
+            "debug_corpo_recebido": texto_bruto
+        }), 400
 
-    produtos_nota = dados.get("produtos")  # lista de nomes vindos do XML
-    lista_cadastrados = dados.get("lista")  # lista de nomes já no banco
+    # Agora 'produtos' e 'lista' chegam como TEXTO simples, com os itens
+    # separados por "|||" (evita ter que montar array JSON com aspas no Bubble).
+    produtos_texto = dados.get("produtos", "")
+    lista_texto = dados.get("lista", "")
+
+    produtos_nota = [p.strip() for p in produtos_texto.split("|||") if p.strip()]
+    lista_cadastrados = [p.strip() for p in lista_texto.split("|||") if p.strip()]
 
     resultados = []
 
